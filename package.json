@@ -37,9 +37,8 @@
   ],
   "scripts": {
     "lint": "eslint .",
-    "test": "npm run lint && nyc node --test",
-    "coverage": "npm run test && nyc report --reporter html",
-    "report-coveralls": "nyc --reporter=lcov node --test"
+    "test": "npm run lint && node --test",
+    "coverage": "c8 --include 'lib/**' --include 'index.js' --include 'http.js' --include 'stream.js' --include 'sync.js' -r text -r html -r lcov node --test"
   },
   "dependencies": {
     "lodash.merge": "^4.6.2",
@@ -47,8 +46,8 @@
     "stream-parser": "~0.3.1"
   },
   "devDependencies": {
+    "c8": "^11.0.0",
     "eslint": "^9.39.4",
-    "neostandard": "^0.13.0",
-    "nyc": "^18.0.0"
+    "neostandard": "^0.13.0"
   }
 }
