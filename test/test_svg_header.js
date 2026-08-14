@@ -56,6 +56,82 @@ describe('svg header parser', function () {
     )
   })
 
+  it('should skip doctype', function () {
+    const expected = { width: 5, height: 4, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' }
+
+    assert.deepStrictEqual(
+      parseSvgHeader('<!DOCTYPE svg><svg width="5" height="4"></svg>'),
+      expected
+    )
+
+    assert.deepStrictEqual(
+      parseSvgHeader('<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" ' +
+        '"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg width="5" height="4"></svg>'),
+      expected
+    )
+
+    // doctype with an internal subset, `>` inside must not end it
+    assert.deepStrictEqual(
+      parseSvgHeader('<!DOCTYPE svg [<!ENTITY foo "bar">]><svg width="5" height="4"></svg>'),
+      expected
+    )
+  })
+
+  it('should skip tags inside comments', function () {
+    assert.deepStrictEqual(
+      parseSvgHeader('<!-- <div> --><svg width="5" height="4"></svg>'),
+      { width: 5, height: 4, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' }
+    )
+  })
+
+  it('should allow > inside attribute values', function () {
+    assert.deepStrictEqual(
+      parseSvgHeader('<svg data-foo="a>b" width="5" height="4"></svg>'),
+      { width: 5, height: 4, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' }
+    )
+  })
+
+  it('should accept unquoted attribute values', function () {
+    assert.deepStrictEqual(
+      parseSvgHeader('<svg width=5 height=4>'),
+      { width: 5, height: 4, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' }
+    )
+  })
+
+  it('should accept comma and whitespace separators in viewbox', function () {
+    const expected = { width: 800, height: 600, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' }
+
+    assert.deepStrictEqual(parseSvgHeader('<svg viewbox="0,0,800,600">'), expected)
+    assert.deepStrictEqual(parseSvgHeader('<svg viewbox="0  0  800  600">'), expected)
+    assert.deepStrictEqual(parseSvgHeader('<svg viewbox="0 0 800\n600">'), expected)
+    assert.deepStrictEqual(parseSvgHeader('<svg viewbox=" 0 0 800 600 ">'), expected)
+  })
+
+  it('should ignore suffixed attributes', function () {
+    const expected = { width: 800, height: 600, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' }
+
+    assert.deepStrictEqual(parseSvgHeader('<svg data-height="1" viewbox="0 0 800 600">'), expected)
+    assert.deepStrictEqual(parseSvgHeader('<svg stroke-height="1" viewbox="0 0 800 600">'), expected)
+  })
+
+  it('should not read size out of other attribute values', function () {
+    assert.deepStrictEqual(
+      parseSvgHeader('<svg data-foo=\'width="1" height="2"\' viewbox="0 0 800 600">'),
+      { width: 800, height: 600, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' }
+    )
+  })
+
+  it('should reject invalid namespace prefix', function () {
+    assert.strictEqual(parseSvgHeader('<9:.-:svg width="5" height="4"></svg>'), undefined)
+  })
+
+  it('should fall back to viewbox on percentage width/height', function () {
+    assert.deepStrictEqual(
+      parseSvgHeader('<svg width="100%" height="100%" viewbox="0 0 800 600">'),
+      { width: 800, height: 600, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' }
+    )
+  })
+
   describe('coverage', function () {
     it('single quotes (width/height)', function () {
       assert.deepStrictEqual(

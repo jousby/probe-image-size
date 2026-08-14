@@ -1353,6 +1353,19 @@ describe('File formats', function () {
       assert.deepStrictEqual(size, { width: 5, height: 4, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' })
     })
 
+    it('should give up on too much data before svg', function () {
+      const tag = Buffer.from('<svg width="5" height="4">')
+
+      // just under the limit
+      assert.deepStrictEqual(
+        probe.sync(Buffer.concat([Buffer.alloc(10000, 0x20), tag])),
+        { width: 5, height: 4, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' }
+      )
+
+      assert.strictEqual(probe.sync(Buffer.concat([Buffer.alloc(20000, 0x20), tag])), null)
+    })
+
+
     describe('coverage', function () {
       it('wrong signature', function () {
         const size = probe.sync(Buffer.from('  <not-really-svg width="1" height="1">'))
