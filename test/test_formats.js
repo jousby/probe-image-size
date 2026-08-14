@@ -1280,54 +1280,12 @@ describe('File formats', function () {
       assert.deepStrictEqual(size, { width: 5, height: 5, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' })
     })
 
-    it('should extract width info from viewbox', async function () {
-      const size = await probe(Readable.from([Buffer.from('<svg viewbox="0 0 800 600"></svg>')]))
-
-      assert.deepStrictEqual(size, { width: 800, height: 600, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' })
-    })
-
-    it('should extract width info from camel cased viewBox', async function () {
-      const size = await probe(Readable.from([Buffer.from('<svg viewBox="0 0 800 600"></svg>')]))
-
-      assert.deepStrictEqual(size, { width: 800, height: 600, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' })
-    })
-
-    it('should return width/height units', async function () {
-      const size = await probe(Readable.from([Buffer.from('<svg width="5in" height="4pt"></svg>')]))
-
-      assert.deepStrictEqual(size, { width: 5, height: 4, type: 'svg', mime: 'image/svg+xml', wUnits: 'in', hUnits: 'pt' })
-    })
-
-    it('should ignore stroke-width', async function () {
-      const size = await probe(Readable.from([Buffer.from('<svg stroke-width="2" width="5" height="4"></svg>')]))
-
-      assert.deepStrictEqual(size, { width: 5, height: 4, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' })
-    })
-
     it('should not parse HTML as SVG', async function () {
       const buf = Buffer.from('<html><body><svg width="5" height="4"></svg></body></html>')
 
       await assert.rejects(
         async () => probe(Readable.from([buf])),
         /unrecognized file format/
-      )
-    })
-
-    it('should skip initial comments and directives', async function () {
-      const buf = Buffer.from('<?xml version="1.0"?><!-- comment --><svg width="5" height="4"></svg>')
-
-      assert.deepStrictEqual(
-        await probe(Readable.from([buf])),
-        { width: 5, height: 4, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' }
-      )
-    })
-
-    it('should allow SVG namespace', async function () {
-      const buf = Buffer.from('<aaa:svg xmlns:aaa="http://www.w3.org/2000/svg" width="5" height="4"></aaa:svg>')
-
-      assert.deepStrictEqual(
-        await probe(Readable.from([buf])),
-        { width: 5, height: 4, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' }
       )
     })
 
@@ -1365,66 +1323,6 @@ describe('File formats', function () {
         )
       })
 
-      it('single quotes (width/height)', async function () {
-        const size = await probe(Readable.from([Buffer.from("<svg width='5in' height='4pt'></svg>")]))
-
-        assert.deepStrictEqual(size, { width: 5, height: 4, type: 'svg', mime: 'image/svg+xml', wUnits: 'in', hUnits: 'pt' })
-      })
-
-      it('single quotes (viewbox)', async function () {
-        const size = await probe(Readable.from([Buffer.from("<svg width='1in' viewbox='0 0 100 50'>")]))
-
-        assert.deepStrictEqual(size, { width: 1, height: 0.5, type: 'svg', mime: 'image/svg+xml', wUnits: 'in', hUnits: 'in' })
-      })
-
-      it('height, no width', async function () {
-        const size = await probe(Readable.from([Buffer.from('<svg height="1in" viewbox="0 0 100 50">')]))
-
-        assert.deepStrictEqual(size, { width: 2, height: 1, type: 'svg', mime: 'image/svg+xml', wUnits: 'in', hUnits: 'in' })
-      })
-
-      it('width is invalid, no height', async function () {
-        await assert.rejects(
-          async () => probe(Readable.from([Buffer.from('<svg width="-1" viewbox="0 0 100 50">')])),
-          /unrecognized file format/
-        )
-      })
-
-      it('height is invalid, no width', async function () {
-        await assert.rejects(
-          async () => probe(Readable.from([Buffer.from('<svg height="foobar" viewbox="0 0 100 50">')])),
-          /unrecognized file format/
-        )
-      })
-
-      it('width is invalid (non positive)', async function () {
-        await assert.rejects(
-          async () => probe(Readable.from([Buffer.from('<svg width="0" height="5">')])),
-          /unrecognized file format/
-        )
-      })
-
-      it('width is invalid (Infinity)', async function () {
-        await assert.rejects(
-          async () => probe(Readable.from([Buffer.from('<svg width="Infinity" height="5">')])),
-          /unrecognized file format/
-        )
-      })
-
-      it('no viewbox, no height', async function () {
-        await assert.rejects(
-          async () => probe(Readable.from([Buffer.from('<svg width="5">')])),
-          /unrecognized file format/
-        )
-      })
-
-      it('viewbox units are different', async function () {
-        await assert.rejects(
-          async () => probe(Readable.from([Buffer.from('<svg width="5" viewbox="0 0 5px 3in">')])),
-          /unrecognized file format/
-        )
-      })
-
       it('early termination', async function () {
         await assert.rejects(
           async () => probe(Readable.from([Buffer.from('<svg width="5" height="5"')])),
@@ -1443,52 +1341,10 @@ describe('File formats', function () {
       assert.deepStrictEqual(size, { width: 744.09448819, height: 1052.3622047, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' })
     })
 
-    it('should extract width info from viewbox', function () {
-      const size = probe.sync(Buffer.from('<svg viewbox="0 0 800 600"></svg>'))
-
-      assert.deepStrictEqual(size, { width: 800, height: 600, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' })
-    })
-
-    it('should extract width info from camel cased viewBox', function () {
-      const size = probe.sync(Buffer.from('<svg viewBox="0 0 800 600"></svg>'))
-
-      assert.deepStrictEqual(size, { width: 800, height: 600, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' })
-    })
-
-    it('should return width/height units', function () {
-      const size = probe.sync(Buffer.from('<svg width="5in" height="4pt"></svg>'))
-
-      assert.deepStrictEqual(size, { width: 5, height: 4, type: 'svg', mime: 'image/svg+xml', wUnits: 'in', hUnits: 'pt' })
-    })
-
-    it('should ignore stroke-width', function () {
-      const size = probe.sync(Buffer.from('<svg stroke-width="2" width="5" height="4"></svg>'))
-
-      assert.deepStrictEqual(size, { width: 5, height: 4, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' })
-    })
-
     it('should not parse HTML as SVG', async function () {
       const buf = Buffer.from('<html><body><svg width="5" height="4"></svg></body></html>')
 
       assert.strictEqual(probe.sync(buf), null)
-    })
-
-    it('should skip initial comments and directives', async function () {
-      const buf = Buffer.from('<?xml version="1.0"?><!-- comment --><svg width="5" height="4"></svg>')
-
-      assert.deepStrictEqual(
-        probe.sync(buf),
-        { width: 5, height: 4, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' }
-      )
-    })
-
-    it('should allow SVG namespace', async function () {
-      const buf = Buffer.from('<aaa:svg xmlns:aaa="http://www.w3.org/2000/svg" width="5" height="4"></aaa:svg>')
-
-      assert.deepStrictEqual(
-        probe.sync(buf),
-        { width: 5, height: 4, type: 'svg', mime: 'image/svg+xml', wUnits: 'px', hUnits: 'px' }
-      )
     })
 
     it('should skip BOM', async function () {
@@ -1502,72 +1358,6 @@ describe('File formats', function () {
         const size = probe.sync(Buffer.from('  <not-really-svg width="1" height="1">'))
 
         assert.strictEqual(size, null)
-      })
-
-      it('single quotes (width/height)', function () {
-        const size = probe.sync(Buffer.from("<svg width='5in' height='4pt'></svg>"))
-
-        assert.deepStrictEqual(size, { width: 5, height: 4, type: 'svg', mime: 'image/svg+xml', wUnits: 'in', hUnits: 'pt' })
-      })
-
-      it('single quotes (viewbox)', function () {
-        const size = probe.sync(Buffer.from("<svg width='1in' viewbox='0 0 100 50'>"))
-
-        assert.deepStrictEqual(size, { width: 1, height: 0.5, type: 'svg', mime: 'image/svg+xml', wUnits: 'in', hUnits: 'in' })
-      })
-
-      it('width, no height', function () {
-        const size = probe.sync(Buffer.from('<svg width="1in" viewbox="0 0 100 50">'))
-
-        assert.deepStrictEqual(size, { width: 1, height: 0.5, type: 'svg', mime: 'image/svg+xml', wUnits: 'in', hUnits: 'in' })
-      })
-
-      it('height, no width', function () {
-        const size = probe.sync(Buffer.from('<svg height="1in" viewbox="0 0 100 50">'))
-
-        assert.deepStrictEqual(size, { width: 2, height: 1, type: 'svg', mime: 'image/svg+xml', wUnits: 'in', hUnits: 'in' })
-      })
-
-      it('width is invalid, no height', function () {
-        const size = probe.sync(Buffer.from('<svg width="-1" viewbox="0 0 100 50">'))
-
-        assert.deepStrictEqual(size, null)
-      })
-
-      it('height is invalid, no width', function () {
-        const size = probe.sync(Buffer.from('<svg height="foobar" viewbox="0 0 100 50">'))
-
-        assert.deepStrictEqual(size, null)
-      })
-
-      it('width is invalid (non positive)', function () {
-        const size = probe.sync(Buffer.from('<svg width="0" height="5">'))
-
-        assert.deepStrictEqual(size, null)
-      })
-
-      it('width is invalid (Infinity)', function () {
-        const size = probe.sync(Buffer.from('<svg width="Infinity" height="5">'))
-
-        assert.deepStrictEqual(size, null)
-      })
-
-      it('no viewbox, no height', function () {
-        const size = probe.sync(Buffer.from('<svg width="5">'))
-
-        assert.deepStrictEqual(size, null)
-      })
-
-      it('viewbox units are different', function () {
-        const size = probe.sync(Buffer.from('<svg width="5" viewbox="0 0 5px 3in">'))
-
-        assert.deepStrictEqual(size, null)
-      })
-
-      it('early termination', function () {
-        const size = probe.sync(Buffer.from('<svg width="5" height="5"'))
-
-        assert.deepStrictEqual(size, null)
       })
     })
   })
