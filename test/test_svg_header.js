@@ -3,7 +3,7 @@
 
 const assert = require('assert')
 const { describe, it } = require('node:test')
-const parseSvgHeader = require('../lib/common/svg_header')
+const parseSvgHeader = require('../lib/common/svg_header').parse
 
 
 describe('svg header parser', function () {
